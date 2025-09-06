@@ -1,7 +1,7 @@
 // Responsive navigation toggle for mobile
 document.addEventListener("DOMContentLoaded", function () {
   const navToggle = document.getElementById("nav-toggle");
-  const navList = document.getElementById("nav-list");
+  const navList = document.querySelector("nav ul");
 
   if (navToggle && navList) {
     navToggle.addEventListener("click", function () {
