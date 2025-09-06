@@ -1,1 +1,40 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact | Alexander222590</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">Alexander222590</div>
+    <nav>
+      <ul id="nav-list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+      <button class="nav-toggle" id="nav-toggle">&#9776;</button>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h1>Contact Me</h1>
+      <form id="contact-form">
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" name="email" required />
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+      <div id="status"></div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Alexander222590
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
