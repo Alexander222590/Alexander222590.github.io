@@ -1,316 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wiki Games & Phone Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .theme-transition {
-            transition: all 0.3s ease-in-out;
-        }
-        
-        .logo-animation {
-            animation: logoFloat 3s ease-in-out infinite;
-        }
-        
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .gradient-bg-light {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .gradient-bg-dark {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-        }
-
-        .dropdown {
-            display: none;
-        }
-        
-        .dropdown.show {
-            display: block;
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .phone-card:hover {
-            transform: translateY(-3px);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhoneHub & GameWiki - Mobile & PC Gaming Hub v1.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .phone-card, .game-card {
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    
+    .phone-card:hover, .game-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .brand-logo {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    
+    .phone-image {
+      width: 120px;
+      height: 200px;
+      background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .phone-screen {
+      width: 90px;
+      height: 160px;
+      background: linear-gradient(145deg, #000, #333);
+      border-radius: 15px;
+      position: relative;
+    }
+    
+    .phone-notch {
+      width: 30px;
+      height: 4px;
+      background: #666;
+      border-radius: 2px;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .game-image {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(145deg, #2d3748, #4a5568);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .game-screenshot {
+      width: 80%;
+      height: 80%;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+    }
+    
+    .spec-badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .os-badge {
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .android-badge {
+      background: #34d399;
+      color: white;
+    }
+    
+    .ios-badge {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .price-tag {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    
+    .rating-stars {
+      color: #ffd700;
+    }
+    
+    .filter-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid #667eea;
+      background: transparent;
+      color: #667eea;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .comparison-table {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .scroll-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      z-index: 9999;
+      transition: width 0.3s ease;
+    }
+    
+    .section-toggle {
+      background: white;
+      border-radius: 50px;
+      padding: 4px;
+      display: inline-flex;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .toggle-btn {
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+  </style>
 </head>
-<body class="theme-transition" id="body">
-    <!-- Navigation -->
-    <nav class="theme-transition px-6 py-4 shadow-lg sticky top-0 z-50" id="nav">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3 logo-animation">
-                <svg width="40" height="40" viewBox="0 0 40 40" class="theme-transition" id="logoSvg">
-                    <defs>
-                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <circle cx="20" cy="20" r="18" fill="url(#logoGradient)" stroke="#fff" stroke-width="2"/>
-                    <path d="M12 20 L18 26 L28 14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span class="text-2xl font-bold theme-transition" id="logoText">Wiki Games Hub</span>
+<body class="bg-gray-50">
+  <!-- Scroll Progress Indicator -->
+  <div class="scroll-indicator" id="scrollProgress"></div>
+
+  <!-- Header -->
+  <header class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold text-xl">🎮</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">PhoneHub & GameWiki</h1>
+            <p class="text-xs text-gray-500">Mobile & PC Gaming Hub v1.0</p>
+          </div>
+        </div>
+        
+        <nav class="hidden md:flex space-x-8">
+          <a href="#phones" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Phones</a>
+          <a href="#games" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">PC Games</a>
+          <a href="#compare" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Compare</a>
+          <a href="#brands" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Brands</a>
+        </nav>
+        
+        <div class="flex items-center space-x-4">
+          <select class="bg-transparent border border-gray-300 rounded-lg px-3 py-1 text-sm">
+            <option value="usd">USD</option>
+            <option value="eur">EUR</option>
+            <option value="gbp">GBP</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="gradient-bg text-white py-20">
+    <div class="container mx-auto px-6 text-center">
+      <h1 class="text-5xl md:text-7xl font-bold mb-6">
+        Phones & Games Hub
+      </h1>
+      <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
+        Discover the best smartphones and PC games. Compare Android vs iOS devices and explore top gaming titles with system requirements.
+      </p>
+      
+      <!-- Section Toggle -->
+      <div class="section-toggle mb-8">
+        <div class="toggle-btn active" onclick="showSection('phones')" id="phonesToggle">📱 Smartphones</div>
+        <div class="toggle-btn" onclick="showSection('games')" id="gamesToggle">🎮 PC Games</div>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="max-w-2xl mx-auto bg-white rounded-full p-2 flex items-center">
+        <input type="text" id="globalSearch" placeholder="Search phones, games, or brands..." class="flex-1 px-6 py-3 text-gray-800 bg-transparent focus:outline-none">
+        <button onclick="performSearch()" class="bg-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-purple-700 transition-colors">
+          Search
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter Section -->
+  <section class="py-8 bg-white border-b">
+    <div class="container mx-auto px-6">
+      <!-- Phone Filters -->
+      <div id="phoneFilters" class="flex flex-wrap gap-4 justify-center">
+        <button class="filter-btn active" onclick="filterPhones('all')">All Phones</button>
+        <button class="filter-btn" onclick="filterPhones('android')">Android</button>
+        <button class="filter-btn" onclick="filterPhones('ios')">iOS</button>
+        <button class="filter-btn" onclick="filterPhones('budget')">Budget (Under $300)</button>
+        <button class="filter-btn" onclick="filterPhones('flagship')">Flagship ($700+)</button>
+        <button class="filter-btn" onclick="filterPhones('gaming')">Gaming</button>
+        <button class="filter-btn" onclick="filterPhones('camera')">Camera Focus</button>
+      </div>
+      
+      <!-- Game Filters -->
+      <div id="gameFilters" class="flex flex-wrap gap-4 justify-center hidden">
+        <button class="filter-btn active" onclick="filterGames('all')">All Games</button>
+        <button class="filter-btn" onclick="filterGames('action')">Action</button>
+        <button class="filter-btn" onclick="filterGames('rpg')">RPG</button>
+        <button class="filter-btn" onclick="filterGames('simulation')">Simulation</button>
+        <button class="filter-btn" onclick="filterGames('strategy')">Strategy</button>
+        <button class="filter-btn" onclick="filterGames('adventure')">Adventure</button>
+        <button class="filter-btn" onclick="filterGames('indie')">Indie</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phones Section -->
+  <section id="phones" class="py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Featured Smartphones</h2>
+        <p class="text-xl text-gray-600">Compare Android and iOS devices from top brands worldwide</p>
+      </div>
+      
+      <div id="phoneGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <!-- Infinix Smart 9 (Android) -->
+        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="budget android" data-brand="infinix" data-os="android">
+          <div class="flex items-center justify-between mb-4">
+            <div class="brand-logo">IN</div>
+            <div class="rating-stars">★★★★☆ 4.2</div>
+          </div>
+          
+          <div class="phone-image mb-4">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
             </div>
-            
-            <!-- Navigation Links -->
-            <div class="hidden md:flex items-center space-x-8">
-                <div class="relative">
-                    <button onclick="toggleDropdown()" class="flex items-center space-x-1 hover:text-blue-600 theme-transition" id="wikiGamesBtn">
-                        <span>Wiki Games</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                    <div class="dropdown absolute top-full left-0 mt-2 w-48 rounded-lg shadow-lg theme-transition" id="dropdown">
-                        <a href="#pc-games" class="block px-4 py-2 hover:bg-gray-100 theme-transition rounded-t-lg">PC Games</a>
-                        <a href="#android-games" class="block px-4 py-2 hover:bg-gray-100 theme-transition">Android Games</a>
-                        <a href="#ios-games" class="block px-4 py-2 hover:bg-gray-100 theme-transition rounded-b-lg">iOS Games</a>
-                    </div>
-                </div>
-                <a href="#phones" class="hover:text-blue-600 theme-transition" id="phonesLink">Phone Recommendations</a>
-                <a href="#more" class="hover:text-blue-600 theme-transition" id="moreLink">More</a>
+          </div>
+          
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-bold text-gray-800">Infinix Smart 9</h3>
+            <span class="os-badge android-badge">Android 14</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">Budget-friendly with great battery life</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Display:</span>
+              <span class="font-medium">6.7" HD+</span>
             </div>
-            
-            <!-- Theme Toggle -->
-            <button onclick="toggleTheme()" class="p-2 rounded-full theme-transition hover:scale-110" id="themeBtn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" id="themeIcon">
-                    <path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5M17.6859 17.69L18.5 18.5M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">RAM:</span>
+              <span class="font-medium">4GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Storage:</span>
+              <span class="font-medium">128GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Camera:</span>
+              <span class="font-medium">48MP</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="spec-badge">5000mAh</span>
+            <span class="spec-badge">Dual SIM</span>
+            <span class="spec-badge">4G LTE</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="price-tag">$149</div>
+            <button onclick="viewPhone('infinix-smart-9')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              View Details
             </button>
+          </div>
         </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="min-h-screen flex items-center justify-center px-6 theme-transition gradient-bg-light" id="hero">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 theme-transition">
-                Wiki Games & Phone Hub
-            </h1>
-            <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
-                Your ultimate destination for game recommendations and phone reviews. Discover the best games across all platforms and find your perfect device.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onclick="scrollToSection('wiki-games')" class="px-8 py-4 bg-white text-gray-800 rounded-full font-semibold hover:bg-gray-100 theme-transition transform hover:scale-105">
-                    Explore Games
-                </button>
-                <button onclick="scrollToSection('phones')" class="px-8 py-4 border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-800 theme-transition transform hover:scale-105">
-                    Find Phones
-                </button>
+        <!-- Samsung Galaxy S24 (Android) -->
+        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship android" data-brand="samsung" data-os="android">
+          <div class="flex items-center justify-between mb-4">
+            <div class="brand-logo">SA</div>
+            <div class="rating-stars">★★★★★ 4.8</div>
+          </div>
+          
+          <div class="phone-image mb-4">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
             </div>
+          </div>
+          
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-bold text-gray-800">Samsung Galaxy S24</h3>
+            <span class="os-badge android-badge">Android 14</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">Flagship with AI features</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Display:</span>
+              <span class="font-medium">6.2" AMOLED</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">RAM:</span>
+              <span class="font-medium">8GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Storage:</span>
+              <span class="font-medium">256GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Camera:</span>
+              <span class="font-medium">50MP Triple</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="spec-badge">4000mAh</span>
+            <span class="spec-badge">One UI 6.1</span>
+            <span class="spec-badge">5G</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="price-tag">$899</div>
+            <button onclick="viewPhone('samsung-s24')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              View Details
+            </button>
+          </div>
         </div>
-    </section>
 
-    <!-- Wiki Games Section -->
-    <section class="py-20 px-6 theme-transition" id="wiki-games">
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-4xl font-bold text-center mb-16 theme-transition" id="wikiGamesTitle">Wiki Games</h2>
-            
-            <!-- PC Games -->
-            <div class="mb-16" id="pc-games">
-                <h3 class="text-3xl font-bold mb-8 theme-transition" id="pcGamesTitle">🖥️ PC Games</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="pcGame1">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🎮</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Cyberpunk 2077</h4>
-                        <p class="text-sm mb-3 theme-transition">Open-world RPG set in a dystopian future. Immersive storytelling with stunning visuals.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">RPG</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="pcGame2">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">⚔️</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Elden Ring</h4>
-                        <p class="text-sm mb-3 theme-transition">Action RPG with challenging gameplay and an expansive open world to explore.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Action RPG</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="pcGame3">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏎️</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Forza Horizon 5</h4>
-                        <p class="text-sm mb-3 theme-transition">Open-world racing game set in Mexico with stunning graphics and diverse gameplay.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Racing</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- iPhone 15 Pro (iOS) -->
+        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship ios" data-brand="apple" data-os="ios">
+          <div class="flex items-center justify-between mb-4">
+            <div class="brand-logo">🍎</div>
+            <div class="rating-stars">★★★★★ 4.9</div>
+          </div>
+          
+          <div class="phone-image mb-4">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
             </div>
-
-            <!-- Android Games -->
-            <div class="mb-16" id="android-games">
-                <h3 class="text-3xl font-bold mb-8 theme-transition" id="androidGamesTitle">📱 Android Games</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="androidGame1">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🔫</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">PUBG Mobile</h4>
-                        <p class="text-sm mb-3 theme-transition">Battle royale shooter with 100 players. Requires Android 5.1+ and 3GB RAM.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Battle Royale</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="androidGame2">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏰</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Clash Royale</h4>
-                        <p class="text-sm mb-3 theme-transition">Real-time strategy game with card collection. Compatible with Android 4.1+.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Strategy</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="androidGame3">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🎯</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Among Us</h4>
-                        <p class="text-sm mb-3 theme-transition">Social deduction game for 4-15 players. Lightweight, runs on most Android devices.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Social</span>
-                        </div>
-                    </div>
-                </div>
+          </div>
+          
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-bold text-gray-800">iPhone 15 Pro</h3>
+            <span class="os-badge ios-badge">iOS 17</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">Premium iOS experience</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Display:</span>
+              <span class="font-medium">6.1" Super Retina</span>
             </div>
-
-            <!-- iOS Games -->
-            <div class="mb-16" id="ios-games">
-                <h3 class="text-3xl font-bold mb-8 theme-transition" id="iosGamesTitle">🍎 iOS Games</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="iosGame1">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🎮</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Genshin Impact</h4>
-                        <p class="text-sm mb-3 theme-transition">Open-world action RPG with gacha elements. Requires iOS 9.0+ and 8GB storage.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Action RPG</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="iosGame2">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🧩</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Monument Valley</h4>
-                        <p class="text-sm mb-3 theme-transition">Puzzle game with stunning visuals and mind-bending architecture. iOS exclusive design.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Puzzle</span>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card p-6 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="iosGame3">
-                        <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏃</div>
-                        <h4 class="text-xl font-bold mb-2 theme-transition">Alto's Odyssey</h4>
-                        <p class="text-sm mb-3 theme-transition">Endless runner with beautiful landscapes. Optimized for iPhone and iPad.</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
-                            <span class="text-sm font-semibold theme-transition">Endless Runner</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">RAM:</span>
+              <span class="font-medium">8GB</span>
             </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Storage:</span>
+              <span class="font-medium">128GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Camera:</span>
+              <span class="font-medium">48MP Pro</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="spec-badge">A17 Pro</span>
+            <span class="spec-badge">Titanium</span>
+            <span class="spec-badge">USB-C</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="price-tag">$999</div>
+            <button onclick="viewPhone('iphone-15-pro')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              View Details
+            </button>
+          </div>
         </div>
-    </section>
 
-    <!-- Phone Recommendations Section -->
-    <section class="py-20 px-6 theme-transition" id="phones">
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-4xl font-bold text-center mb-16 theme-transition" id="phonesTitle">📱 Phone Recommendations</h2>
-            
-            <div class="grid lg:grid-cols-2 gap-8">
-                <!-- iPhone 15 Pro -->
-                <div class="phone-card p-8 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="phone1">
-                    <div class="flex items-center mb-6">
-                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl mr-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📱</div>
-                        <div>
-                            <h3 class="text-2xl font-bold theme-transition">iPhone 15 Pro</h3>
-                            <p class="theme-transition">iOS 17</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="font-semibold mb-2 theme-transition">Key Features:</h4>
-                            <ul class="text-sm space-y-1 theme-transition">
-                                <li>• 6.1" Super Retina XDR display</li>
-                                <li>• A17 Pro chip with 6-core GPU</li>
-                                <li>• 8GB RAM, up to 1TB storage</li>
-                                <li>• 3274mAh battery, all-day life</li>
-                                <li>• 48MP main + 12MP ultra-wide + 12MP telephoto</li>
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h4 class="font-semibold mb-2 theme-transition">Best For:</h4>
-                            <p class="text-sm theme-transition">Premium gaming, professional photography, iOS ecosystem users</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <h5 class="font-semibold text-green-600">Pros:</h5>
-                                <ul class="text-xs theme-transition">
-                                    <li>• Excellent performance</li>
-                                    <li>• Great camera system</li>
-                                    <li>• Premium build quality</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-red-600">Cons:</h5>
-                                <ul class="text-xs theme-transition">
-                                    <li>• Expensive</li>
-                                    <li>• Limited customization</li>
-                                    <li>• No expandable storage</li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <button class="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 theme-transition">
-                            View Official Site
-                        </button>
-                    </div>
-                </div>
+        <!-- iPhone 15 (iOS) -->
+        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship ios" data-brand="apple" data-os="ios">
+          <div class="flex items-center justify-between mb-4">
+            <div class="brand-logo">🍎</div>
+            <div class="rating-stars">★★★★★ 4.7</div>
+          </div>
+          
+          <div class="phone-image mb-4">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-bold text-gray-800">iPhone 15</h3>
+            <span class="os-badge ios-badge">iOS 17</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">Standard iOS excellence</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Display:</span>
+              <span class="font-medium">6.1" Super Retina</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">RAM:</span>
+              <span class="font-medium">6GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Storage:</span>
+              <span class="font-medium">128GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Camera:</span>
+              <span class="font-medium">48MP</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="spec-badge">A16 Bionic</span>
+            <span class="spec-badge">Dynamic Island</span>
+            <span class="spec-badge">USB-C</span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="price-tag">$799</div>
+            <button onclick="viewPhone('iphone-15')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              View Details
+            </button>
+          </div>
+        </div>
 
-                <!-- Samsung Galaxy S24 Ultra -->
-                <div class="phone-card p-8 rounded-2xl theme-transition shadow-lg transform hover:scale-105" id="phone2">
-                    <div class="flex items-center mb-6">
-                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl mr-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📱</div>
-                        <div>
-                            <h3 class="text-2xl font-bold theme-transition">Samsung Galaxy S24 Ultra</h3>
-                            <p class="theme-transition">Android 14</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="font-semibold mb-2 theme-transition">Key Features:</h4>
-                            <ul class="text-sm space-y-1 theme-transition">
-                                <li>• 6.8" Dynamic AMOLED 2X display</li>
-                                <li>• Snapdragon 8 Gen 3 processor</li>
-                                <li>• 12GB RAM, up to 1TB storage</li>
-                                <li>• 5000mAh battery with fast charging</li>
-                                <li>• 200MP main + 50MP periscope + 12MP ultra-wide</li>
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h4 class="font-semibold mb-2 theme-transition">Best For:</h4>
-                            <p class="text-sm theme-transition">Gaming powerhouse, productivity with S Pen, Android customization</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <h5 class="font-semibold text-green-600">Pros:<
+        <!-- Xiaomi Redmi Note 13 (Android) -->
+        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="mid-range android" data-brand="xiaomi" data-os="android">
+          <div class="flex items-center justify-between mb-4">
+            <div class="brand-logo">MI</div>
+            <div class="rating-stars">★★★★☆ 4.5</div>
+          </div>
+          
+          <div class="phone-image mb-4">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xl font-bold text-gray-800">Xiaomi Redmi Note 13</h3>
+            <span class="os-badge android-badge">MIUI 14</span>
+          </div>
+          <p class="text-gray-600 text-sm mb-4">Best value for money</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Display:</span>
+              <span class="font-medium">6.67" AMOLED</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">RAM:</span>
+              <span class="font-medium">6GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Storage:</span>
+              <span class="font-medium">128GB</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Camera:</span>
+              <span class="font-medium">108MP</span>
+ 
