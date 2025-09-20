@@ -45,6 +45,7 @@
       border-radius: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       overflow: hidden;
+      position: relative;
     }
 
     .chat-header {
@@ -151,11 +152,113 @@
       opacity: 0.9;
     }
 
+    .auth-bar {
+      margin-left: 8px;
+    }
+
+    .auth-bar button {
+      background: transparent;
+      border: none;
+      color: var(--header-text);
+      font-size: 1rem;
+      cursor: pointer;
+      margin-left: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background .2s;
+    }
+    .auth-bar button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* Auth Modal */
+    #auth-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #auth-modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2em 1.5em;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      width: 340px;
+      text-align: center;
+    }
+    .modal-content h2 {
+      margin-bottom: 1em;
+    }
+    .modal-content input {
+      width: 90%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+    }
+    .modal-content button {
+      margin: 10px 3px 0 3px;
+      padding: 9px 22px;
+      border-radius: 8px;
+      border: none;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .modal-content button:hover {
+      background: #3730a3;
+    }
+    .modal-content .close {
+      background: #e5e7eb;
+      color: #222;
+      margin-top: 15px;
+      font-weight: normal;
+    }
+    .captcha-block {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .captcha-challenge {
+      font-weight: bold;
+      font-size: 1.1em;
+      background: #f2f8fd;
+      padding: 5px 12px;
+      border-radius: 6px;
+      user-select: none;
+    }
+    .captcha-input {
+      width: 60px;
+      text-align: center;
+    }
+    .modal-status {
+      color: #e11d48;
+      margin-top: 10px;
+      min-height: 1.2em;
+    }
+
     @media (max-width: 600px) {
       .chat-container {
         max-width: 100%;
         height: 100vh;
         border-radius: 0;
+      }
+      .modal-content {
+        width: 90vw;
       }
     }
   </style>
@@ -167,12 +270,35 @@
       <div>
         <button id="darkToggle">🌙</button>
         <button id="clearChat">🗑</button>
+        <span class="auth-bar">
+          <button id="loginBtn">Login</button>
+          <button id="signupBtn">Sign Up</button>
+          <button id="logoutBtn" style="display:none;">Logout</button>
+        </span>
       </div>
     </div>
     <div id="messages"></div>
     <div class="chat-input">
       <input id="input" placeholder="Type your message..." />
       <button id="send">Send</button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal">
+    <div class="modal-content">
+      <h2 id="auth-title">Login</h2>
+      <form id="auth-form">
+        <input type="text" id="auth-username" placeholder="Username" required /><br/>
+        <input type="password" id="auth-password" placeholder="Password" required /><br/>
+        <div class="captcha-block">
+          <span id="captcha-question" class="captcha-challenge"></span>
+          <input type="text" id="captcha-answer" class="captcha-input" placeholder="?" required />
+        </div>
+        <button type="submit" id="auth-action">Login</button>
+      </form>
+      <button class="close" id="closeAuth">Close</button>
+      <div class="modal-status" id="auth-status"></div>
     </div>
   </div>
 
@@ -183,8 +309,36 @@
     const sendBtn = document.getElementById("send");
     const darkToggle = document.getElementById("darkToggle");
     const clearChat = document.getElementById("clearChat");
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
+    // Auth modal
+    const authModal = document.getElementById("auth-modal");
+    const authTitle = document.getElementById("auth-title");
+    const authForm = document.getElementById("auth-form");
+    const authUsername = document.getElementById("auth-username");
+    const authPassword = document.getElementById("auth-password");
+    const authAction = document.getElementById("auth-action");
+    const authStatus = document.getElementById("auth-status");
+    const closeAuth = document.getElementById("closeAuth");
+    const captchaQuestion = document.getElementById("captcha-question");
+    const captchaAnswer = document.getElementById("captcha-answer");
+
+    // Simple local accounts (demo only)
+    let accounts = JSON.parse(localStorage.getItem("accounts") || "{}");
     let username = localStorage.getItem("username") || null;
+    let loggedIn = !!username;
+
+    // CAPTCHA generator
+    let captchaResult = 0;
+    function generateCaptcha() {
+      const a = Math.floor(Math.random() * 10) + 1;
+      const b = Math.floor(Math.random() * 10) + 1;
+      captchaQuestion.textContent = `${a} + ${b} = ?`;
+      captchaResult = a + b;
+      captchaAnswer.value = "";
+    }
 
     function saveChat() {
       localStorage.setItem("chatHistory", messages.innerHTML);
@@ -216,23 +370,19 @@
     async function sendMessage() {
       const text = input.value.trim();
       if (!text) return;
+      if (!loggedIn) {
+        addMessage("Please login or sign up to chat.", "bot");
+        return;
+      }
       addMessage(text, "user");
       input.value = "";
       const typingEl = showTyping();
 
-      try {
-        const res = await fetch("http://localhost:5000/chat", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ message: username ? `${username}: ${text}` : text })
-        });
-        const data = await res.json();
+      // Demo: reply locally. For real backend, use fetch as before.
+      setTimeout(() => {
         messages.removeChild(typingEl);
-        addMessage(data.reply || "No reply.", "bot");
-      } catch (err) {
-        messages.removeChild(typingEl);
-        addMessage("Error connecting to server.", "bot");
-      }
+        addMessage("Aiden says: " + text.split("").reverse().join(""), "bot");
+      }, 800);
     }
 
     sendBtn.onclick = sendMessage;
@@ -252,455 +402,99 @@
       addMessage("Chat cleared. 👌", "bot");
     };
 
+    // Auth modal logic
+    loginBtn.onclick = () => {
+      showAuthModal("Login");
+    };
+    signupBtn.onclick = () => {
+      showAuthModal("Sign Up");
+    };
+    logoutBtn.onclick = () => {
+      username = null;
+      loggedIn = false;
+      localStorage.removeItem("username");
+      updateAuthBar();
+      addMessage("You have been logged out.", "bot");
+    };
+
+    function showAuthModal(mode) {
+      authTitle.textContent = mode;
+      authAction.textContent = mode;
+      authStatus.textContent = "";
+      authForm.dataset.mode = mode;
+      authModal.classList.add("active");
+      generateCaptcha();
+      authUsername.value = "";
+      authPassword.value = "";
+      captchaAnswer.value = "";
+      setTimeout(() => authUsername.focus(), 200);
+    }
+    closeAuth.onclick = () => {
+      authModal.classList.remove("active");
+    };
+
+    authForm.onsubmit = function(e) {
+      e.preventDefault();
+      const mode = authForm.dataset.mode;
+      const uname = authUsername.value.trim();
+      const pwd = authPassword.value;
+      if (!uname || !pwd) {
+        authStatus.textContent = "Username and password required.";
+        return;
+      }
+      if (parseInt(captchaAnswer.value) !== captchaResult) {
+        authStatus.textContent = "Incorrect CAPTCHA.";
+        generateCaptcha();
+        return;
+      }
+      if (mode === "Login") {
+        if (!accounts[uname] || accounts[uname] !== pwd) {
+          authStatus.textContent = "Invalid username or password.";
+          return;
+        }
+        username = uname;
+        loggedIn = true;
+        localStorage.setItem("username", username);
+        authModal.classList.remove("active");
+        updateAuthBar();
+        addMessage(`Welcome back, ${username}! 👋`, "bot");
+      } else {
+        if (accounts[uname]) {
+          authStatus.textContent = "Username already exists.";
+          return;
+        }
+        accounts[uname] = pwd;
+        localStorage.setItem("accounts", JSON.stringify(accounts));
+        username = uname;
+        loggedIn = true;
+        localStorage.setItem("username", username);
+        authModal.classList.remove("active");
+        updateAuthBar();
+        addMessage(`Account created. Welcome, ${username}!`, "bot");
+      }
+    };
+
+    function updateAuthBar() {
+      if (loggedIn) {
+        loginBtn.style.display = "none";
+        signupBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+      } else {
+        loginBtn.style.display = "inline-block";
+        signupBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+      }
+    }
+
     window.onload = () => {
+      updateAuthBar();
       loadChat();
-      if (!username) {
-        addMessage("Hi! I'm Aiden. What's your name?", "bot");
+      if (!loggedIn) {
+        addMessage("Hi! Please login or sign up to chat.", "bot");
       } else {
         addMessage(`Welcome back, ${username}! 👋`, "bot");
       }
     };
-
-    // Capture first message as name if not set
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !username && input.value.trim()) {
-        username = input.value.trim();
-        localStorage.setItem("username", username);
-        addMessage(`Nice to meet you, ${username}! What do you want to do today?`, "bot");
-        input.value = "";
-      }
-    });
   </script>
 </body>
-</html>      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    
-    .android-badge {
-      background: #34d399;
-      color: white;
-    }
-    
-    .ios-badge {
-      background: #3b82f6;
-      color: white;
-    }
-    
-    .price-tag {
-      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    
-    .rating-stars {
-      color: #ffd700;
-    }
-    
-    .filter-btn {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 2px solid #667eea;
-      background: transparent;
-      color: #667eea;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-    
-    .filter-btn.active {
-      background: #667eea;
-      color: white;
-    }
-    
-    .comparison-table {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-    
-    .animate-fade-in {
-      animation: fadeIn 0.6s ease-out;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .scroll-indicator {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 0%;
-      height: 4px;
-      background: linear-gradient(90deg, #667eea, #764ba2);
-      z-index: 9999;
-      transition: width 0.3s ease;
-    }
-    
-    .section-toggle {
-      background: white;
-      border-radius: 50px;
-      padding: 4px;
-      display: inline-flex;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .toggle-btn {
-      padding: 12px 24px;
-      border-radius: 50px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    
-    .toggle-btn.active {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-    }
-  </style>
-</head>
-<body class="bg-gray-50">
-  <!-- Scroll Progress Indicator -->
-  <div class="scroll-indicator" id="scrollProgress"></div>
-
-  <!-- Header -->
-  <header class="bg-white shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto px-6 py-4">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-          <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center">
-            <span class="text-white font-bold text-xl">🎮</span>
-          </div>
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800">PhoneHub & GameWiki</h1>
-            <p class="text-xs text-gray-500">Mobile & PC Gaming Hub v1.0</p>
-          </div>
-        </div>
-        
-        <nav class="hidden md:flex space-x-8">
-          <a href="#phones" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Phones</a>
-          <a href="#games" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">PC Games</a>
-          <a href="#compare" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Compare</a>
-          <a href="#brands" class="text-gray-600 hover:text-purple-600 transition-colors font-medium">Brands</a>
-        </nav>
-        
-        <div class="flex items-center space-x-4">
-          <select class="bg-transparent border border-gray-300 rounded-lg px-3 py-1 text-sm">
-            <option value="usd">USD</option>
-            <option value="eur">EUR</option>
-            <option value="gbp">GBP</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="gradient-bg text-white py-20">
-    <div class="container mx-auto px-6 text-center">
-      <h1 class="text-5xl md:text-7xl font-bold mb-6">
-        Phones & Games Hub
-      </h1>
-      <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
-        Discover the best smartphones and PC games. Compare Android vs iOS devices and explore top gaming titles with system requirements.
-      </p>
-      
-      <!-- Section Toggle -->
-      <div class="section-toggle mb-8">
-        <div class="toggle-btn active" onclick="showSection('phones')" id="phonesToggle">📱 Smartphones</div>
-        <div class="toggle-btn" onclick="showSection('games')" id="gamesToggle">🎮 PC Games</div>
-      </div>
-      
-      <!-- Search Bar -->
-      <div class="max-w-2xl mx-auto bg-white rounded-full p-2 flex items-center">
-        <input type="text" id="globalSearch" placeholder="Search phones, games, or brands..." class="flex-1 px-6 py-3 text-gray-800 bg-transparent focus:outline-none">
-        <button onclick="performSearch()" class="bg-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-purple-700 transition-colors">
-          Search
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Filter Section -->
-  <section class="py-8 bg-white border-b">
-    <div class="container mx-auto px-6">
-      <!-- Phone Filters -->
-      <div id="phoneFilters" class="flex flex-wrap gap-4 justify-center">
-        <button class="filter-btn active" onclick="filterPhones('all')">All Phones</button>
-        <button class="filter-btn" onclick="filterPhones('android')">Android</button>
-        <button class="filter-btn" onclick="filterPhones('ios')">iOS</button>
-        <button class="filter-btn" onclick="filterPhones('budget')">Budget (Under $300)</button>
-        <button class="filter-btn" onclick="filterPhones('flagship')">Flagship ($700+)</button>
-        <button class="filter-btn" onclick="filterPhones('gaming')">Gaming</button>
-        <button class="filter-btn" onclick="filterPhones('camera')">Camera Focus</button>
-      </div>
-      
-      <!-- Game Filters -->
-      <div id="gameFilters" class="flex flex-wrap gap-4 justify-center hidden">
-        <button class="filter-btn active" onclick="filterGames('all')">All Games</button>
-        <button class="filter-btn" onclick="filterGames('action')">Action</button>
-        <button class="filter-btn" onclick="filterGames('rpg')">RPG</button>
-        <button class="filter-btn" onclick="filterGames('simulation')">Simulation</button>
-        <button class="filter-btn" onclick="filterGames('strategy')">Strategy</button>
-        <button class="filter-btn" onclick="filterGames('adventure')">Adventure</button>
-        <button class="filter-btn" onclick="filterGames('indie')">Indie</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Phones Section -->
-  <section id="phones" class="py-20">
-    <div class="container mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Featured Smartphones</h2>
-        <p class="text-xl text-gray-600">Compare Android and iOS devices from top brands worldwide</p>
-      </div>
-      
-      <div id="phoneGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        <!-- Infinix Smart 9 (Android) -->
-        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="budget android" data-brand="infinix" data-os="android">
-          <div class="flex items-center justify-between mb-4">
-            <div class="brand-logo">IN</div>
-            <div class="rating-stars">★★★★☆ 4.2</div>
-          </div>
-          
-          <div class="phone-image mb-4">
-            <div class="phone-screen">
-              <div class="phone-notch"></div>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">Infinix Smart 9</h3>
-            <span class="os-badge android-badge">Android 14</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-4">Budget-friendly with great battery life</p>
-          
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Display:</span>
-              <span class="font-medium">6.7" HD+</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">RAM:</span>
-              <span class="font-medium">4GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Storage:</span>
-              <span class="font-medium">128GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Camera:</span>
-              <span class="font-medium">48MP</span>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="spec-badge">5000mAh</span>
-            <span class="spec-badge">Dual SIM</span>
-            <span class="spec-badge">4G LTE</span>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="price-tag">$149</div>
-            <button onclick="viewPhone('infinix-smart-9')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-              View Details
-            </button>
-          </div>
-        </div>
-
-        <!-- Samsung Galaxy S24 (Android) -->
-        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship android" data-brand="samsung" data-os="android">
-          <div class="flex items-center justify-between mb-4">
-            <div class="brand-logo">SA</div>
-            <div class="rating-stars">★★★★★ 4.8</div>
-          </div>
-          
-          <div class="phone-image mb-4">
-            <div class="phone-screen">
-              <div class="phone-notch"></div>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">Samsung Galaxy S24</h3>
-            <span class="os-badge android-badge">Android 14</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-4">Flagship with AI features</p>
-          
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Display:</span>
-              <span class="font-medium">6.2" AMOLED</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">RAM:</span>
-              <span class="font-medium">8GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Storage:</span>
-              <span class="font-medium">256GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Camera:</span>
-              <span class="font-medium">50MP Triple</span>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="spec-badge">4000mAh</span>
-            <span class="spec-badge">One UI 6.1</span>
-            <span class="spec-badge">5G</span>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="price-tag">$899</div>
-            <button onclick="viewPhone('samsung-s24')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-              View Details
-            </button>
-          </div>
-        </div>
-
-        <!-- iPhone 15 Pro (iOS) -->
-        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship ios" data-brand="apple" data-os="ios">
-          <div class="flex items-center justify-between mb-4">
-            <div class="brand-logo">🍎</div>
-            <div class="rating-stars">★★★★★ 4.9</div>
-          </div>
-          
-          <div class="phone-image mb-4">
-            <div class="phone-screen">
-              <div class="phone-notch"></div>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">iPhone 15 Pro</h3>
-            <span class="os-badge ios-badge">iOS 17</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-4">Premium iOS experience</p>
-          
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Display:</span>
-              <span class="font-medium">6.1" Super Retina</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">RAM:</span>
-              <span class="font-medium">8GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Storage:</span>
-              <span class="font-medium">128GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Camera:</span>
-              <span class="font-medium">48MP Pro</span>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="spec-badge">A17 Pro</span>
-            <span class="spec-badge">Titanium</span>
-            <span class="spec-badge">USB-C</span>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="price-tag">$999</div>
-            <button onclick="viewPhone('iphone-15-pro')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-              View Details
-            </button>
-          </div>
-        </div>
-
-        <!-- iPhone 15 (iOS) -->
-        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="flagship ios" data-brand="apple" data-os="ios">
-          <div class="flex items-center justify-between mb-4">
-            <div class="brand-logo">🍎</div>
-            <div class="rating-stars">★★★★★ 4.7</div>
-          </div>
-          
-          <div class="phone-image mb-4">
-            <div class="phone-screen">
-              <div class="phone-notch"></div>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">iPhone 15</h3>
-            <span class="os-badge ios-badge">iOS 17</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-4">Standard iOS excellence</p>
-          
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Display:</span>
-              <span class="font-medium">6.1" Super Retina</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">RAM:</span>
-              <span class="font-medium">6GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Storage:</span>
-              <span class="font-medium">128GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Camera:</span>
-              <span class="font-medium">48MP</span>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="spec-badge">A16 Bionic</span>
-            <span class="spec-badge">Dynamic Island</span>
-            <span class="spec-badge">USB-C</span>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="price-tag">$799</div>
-            <button onclick="viewPhone('iphone-15')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-              View Details
-            </button>
-          </div>
-        </div>
-
-        <!-- Xiaomi Redmi Note 13 (Android) -->
-        <div class="phone-card p-6 rounded-2xl animate-fade-in" data-category="mid-range android" data-brand="xiaomi" data-os="android">
-          <div class="flex items-center justify-between mb-4">
-            <div class="brand-logo">MI</div>
-            <div class="rating-stars">★★★★☆ 4.5</div>
-          </div>
-          
-          <div class="phone-image mb-4">
-            <div class="phone-screen">
-              <div class="phone-notch"></div>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">Xiaomi Redmi Note 13</h3>
-            <span class="os-badge android-badge">MIUI 14</span>
-          </div>
-          <p class="text-gray-600 text-sm mb-4">Best value for money</p>
-          
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Display:</span>
-              <span class="font-medium">6.67" AMOLED</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">RAM:</span>
-              <span class="font-medium">6GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Storage:</span>
-              <span class="font-medium">128GB</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Camera:</span>
-              <span class="font-medium">108MP</span>
- 
+</html>
